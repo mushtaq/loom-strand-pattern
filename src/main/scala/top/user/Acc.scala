@@ -7,7 +7,7 @@ import java.io.Closeable
 // All methods can be scheduled on a single thread ('the Strand')
 // Direct mutating operation on the shared state is allowed
 // Blocking calls and Future results must be handled via the 'StrandContext'
-class Acc(context: StrandContext, external: External):
+class Acc(context: StrandContext, externalService: ExternalService):
   private var balance = 0
   private var totalTx = 0
 
@@ -28,7 +28,7 @@ class Acc(context: StrandContext, external: External):
       // All these mutations will be take place on 'the Strand'
     }
 
-    context.onComplete(external.serviceCall()) { x =>
+    context.onComplete(externalService.ioCall()) { x =>
       // Asynchronous operation using the result of a async call
       // User can freely mutate the shared state here
       // All these mutations will be take place on 'the Strand'
@@ -42,12 +42,14 @@ class Acc(context: StrandContext, external: External):
     balance + computeInterest()
 
 object Acc:
-  def create(strand: Strand, external: External) = new Acc(strand, external) with Closeable:
+  // Unsafe factory, just for the demo purpose
+  // Updates will be lost, Do Not Use!
+  def create(strand: Strand, externalService: ExternalService) = new Acc(strand, externalService) with Closeable:
     def close(): Unit = strand.close()
 
-  // This factory uses mechanical transformation of the user class Acc
-  // Hence, this can be automated using a macro annotation on the Acc class
-  def createSafe(strand: Strand, external: External) = new Acc(strand, external) with Closeable:
+  // Safe factory that does mechanical transformations before creating an instance
+  // This can be automated using a macro annotation on the Acc class
+  def createSafe(strand: Strand, externalService: ExternalService) = new Acc(strand, externalService) with Closeable:
     override def get(): Int                       = strand.execute(super.get())
     override def set(x: Int): Unit                = strand.execute(super.set(x))
     override def computeInterest(): Double        = strand.execute(super.computeInterest())
