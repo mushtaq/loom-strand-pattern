@@ -4,8 +4,9 @@ import top.lib.{Strand, StrandContext}
 
 import java.io.Closeable
 
-// Acc class is implemented assuming all methods will always be scheduled on a single thread
-// Let's call this thread 'the Strand'
+// All methods can be scheduled on a single thread ('the Strand')
+// Direct mutating operation on the shared state is allowed
+// Blocking calls and Future results must be handled via the 'StrandContext'
 class Acc(context: StrandContext, external: External):
   private var balance = 0
   private var totalTx = 0
