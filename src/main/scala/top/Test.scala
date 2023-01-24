@@ -1,7 +1,7 @@
 package top
 
 import java.util.concurrent.{CompletableFuture, ExecutorService, Executors}
-import top.user.Acc
+import top.user.Account
 import top.user.ExternalService
 import top.lib.Strand
 
@@ -13,18 +13,18 @@ object Test:
 
     val externalService = ExternalService(globalExecutor)
 
-    val acc     = Acc.create(Strand(globalExecutor), externalService)
-    val safeAcc = Acc.createSafe(Strand(globalExecutor), externalService)
+    val account     = Account.create(Strand(globalExecutor), externalService)
+    val safeAccount = Account.createSafe(Strand(globalExecutor), externalService)
 
-    val accResult     = test(acc, globalExecutor)     // some Acc updates are lost
-    val safeAccResult = test(safeAcc, globalExecutor) // all the Acc updates are preserved
+    val accResult     = test(account, globalExecutor)     // some Acc updates are lost
+    val safeAccResult = test(safeAccount, globalExecutor) // all the Acc updates are preserved
 
     println(s"accResult = $accResult")
     println(s"safeAccResult = $safeAccResult")
 
     globalExecutor.shutdown()
 
-  private def test(acc: Acc with Closeable, globalExecutor: ExecutorService) =
+  private def test(acc: Account with Closeable, globalExecutor: ExecutorService) =
     // Asynchronously increments the balance by 1
     def update() = CompletableFuture.supplyAsync(() => acc.set(1), globalExecutor)
 

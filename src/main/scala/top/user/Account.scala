@@ -7,7 +7,7 @@ import java.io.Closeable
 // All methods can be scheduled on a single thread ('the Strand')
 // Direct mutating operation on the shared state is allowed
 // Blocking calls and Future results must be handled via the 'StrandContext'
-class Acc(context: StrandContext, externalService: ExternalService):
+class Account(context: StrandContext, externalService: ExternalService):
   private var balance = 0
   private var totalTx = 0
 
@@ -41,15 +41,15 @@ class Acc(context: StrandContext, externalService: ExternalService):
     totalTx += 1
     balance + computeInterest()
 
-object Acc:
+object Account:
   // Unsafe factory, just for the demo purpose
   // Updates will be lost, Do Not Use!
-  def create(strand: Strand, externalService: ExternalService) = new Acc(strand, externalService) with Closeable:
+  def create(strand: Strand, externalService: ExternalService) = new Account(strand, externalService) with Closeable:
     def close(): Unit = strand.close()
 
   // Safe factory that does mechanical transformations before creating an instance
   // This can be automated using a macro annotation on the Acc class
-  def createSafe(strand: Strand, externalService: ExternalService) = new Acc(strand, externalService) with Closeable:
+  def createSafe(strand: Strand, externalService: ExternalService) = new Account(strand, externalService) with Closeable:
     override def get(): Int                       = strand.execute(super.get())
     override def set(x: Int): Unit                = strand.execute(super.set(x))
     override def computeInterest(): Double        = strand.execute(super.computeInterest())
