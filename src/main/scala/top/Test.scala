@@ -1,5 +1,7 @@
 package top
 
+import top.lib.RichExecutor.async
+
 import java.util.concurrent.{CompletableFuture, ExecutorService, Executors}
 import top.user.Account
 import top.user.ExternalService
@@ -26,10 +28,10 @@ object Test:
 
   private def test(acc: Account with Closeable, globalExecutor: ExecutorService) =
     // Asynchronously increments the balance by 1
-    def update() = CompletableFuture.supplyAsync(() => acc.set(1), globalExecutor)
+    def update() = globalExecutor.async(acc.set(1))
 
     // Large number of concurrent updates
-    val updateFutures = (1 to 1000).map(* => update())
+    val updateFutures: Seq[CompletableFuture[Unit]] = (1 to 1000).map(* => update())
 
     // Wait for all updates to finish
     updateFutures.foreach(_.get())

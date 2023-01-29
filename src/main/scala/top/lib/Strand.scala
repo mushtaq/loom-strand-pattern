@@ -1,7 +1,9 @@
 package top.lib
 
+import top.lib.RichExecutor.async
+
 import java.io.Closeable
-import java.util.concurrent.{CompletableFuture, ExecutorService, Executors}
+import java.util.concurrent.{CompletableFuture, ExecutorService, Executors, ThreadFactory}
 
 class Strand(globalExecutor: ExecutorService) extends StrandContext with Closeable:
   // Single threaded executor but used a virtual thread
@@ -10,16 +12,18 @@ class Strand(globalExecutor: ExecutorService) extends StrandContext with Closeab
 
   // This is used to wrap the user code so that it all executes on a single virtual thread
   def execute[T](mutatingOp: => T): T =
-    executeAsync(mutatingOp).get()
-
-  private def executeAsync[T](mutatingOp: => T): CompletableFuture[T] =
-    CompletableFuture.supplyAsync(() => mutatingOp, strandExecutor)
-
-  def blocking[T, R](blockingOp: => T)(onResult: T => R): CompletableFuture[R] =
-    val executeOnGlobal = CompletableFuture.supplyAsync(() => blockingOp, globalExecutor)
-    onComplete(executeOnGlobal)(onResult)
+    strandExecutor.async(mutatingOp).get()
 
   def onComplete[T, R](future: CompletableFuture[T])(onResult: T => R): CompletableFuture[R] =
-    future.thenCompose(x => executeAsync(onResult(x)))
+    blocking(future.get()): x =>
+      onResult(x)
+
+  def blocking[T, R](blockingOp: => T)(onResult: T => R): CompletableFuture[R] =
+    globalExecutor.async:
+      val result = blockingOp // block in the globalExecutor
+      val transformResult =
+        strandExecutor.async:
+          onResult(result) // callback on the result in the strandExecutor
+      transformResult.get()
 
   def close(): Unit = strandExecutor.shutdown()
