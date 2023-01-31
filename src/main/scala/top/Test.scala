@@ -18,6 +18,9 @@ object Test:
     val account     = Account.create(Strand(globalExecutor), externalService)
     val safeAccount = Account.createSafe(Strand(globalExecutor), externalService)
 
+    // this will deadlock!
+//    println(safeAccount.getBalanceWithInterest())
+
     val accResult     = test(account, globalExecutor)     // some Acc updates are lost
     val safeAccResult = test(safeAccount, globalExecutor) // all the Acc updates are preserved
 
