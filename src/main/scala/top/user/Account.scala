@@ -28,7 +28,7 @@ class Account(context: StrandContext, externalService: ExternalService):
       // All these mutations will be take place on 'the Strand'
       ()
 
-    context.onComplete(externalService.ioCall()): x =>
+    context.onComplete(externalService.javaIoCall()): x =>
       // Asynchronous operation using the result of a async call
       // User can freely mutate the shared state here
       // All these mutations will be take place on 'the Strand'
