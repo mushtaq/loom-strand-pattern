@@ -1,13 +1,11 @@
-package top
+package top.user
 
 import top.lib.RichExecutor.async
-
-import java.util.concurrent.{CompletableFuture, ExecutorService, Executors}
-import top.user.Account
-import top.user.ExternalService
 import top.lib.Strand
+import top.user.{Account, ExternalService}
 
 import java.io.Closeable
+import java.util.concurrent.{CompletableFuture, ExecutorService, Executors}
 
 object Test:
   @main def main: Unit =
@@ -18,7 +16,7 @@ object Test:
     val account     = Account.create(Strand(globalExecutor), externalService)
     val safeAccount = Account.createSafe(Strand(globalExecutor), externalService)
 
-    // this will deadlock!
+//    this will deadlock !
 //    println(safeAccount.getBalanceWithInterest())
 
     val accResult     = test(account, globalExecutor)     // some Acc updates are lost
